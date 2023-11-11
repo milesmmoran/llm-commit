@@ -17,16 +17,22 @@ is_subdir() {
 
 # Function to generate commit message
 generate_commit_message() {
-    # Capture git diff
-    git_diff=$(git diff)
+    # Capture git diff of staged files
+    git_diff=$(git diff --cached)
+
+    # If there are no staged changes, exit
+    if [ -z "$git_diff" ]; then
+        echo "No staged changes to commit."
+        exit 0
+    fi
 
     # Prepare the payload with the git diff
     payload=$(jq -n \
                   --arg diff "$git_diff" \
-                  '{model: "gpt-3.5-turbo", messages: [{role: "system", content: "You are an assistant who generates commit messages based on git diffs."}, {role: "user", content: $diff}]}')
+                  '{model: "gpt-3.5-turbo", messages: [{role: "system", content: "You are an assistant who generates commit messages based on git diffs of staged changes. "}, {role: "user", content: $diff}]}')
 
     # Call the OpenAI API
-    response=$(curl https://api.openai.com/v1/chat/completions \
+    response=$(curl -s https://api.openai.com/v1/chat/completions \
                     -H "Content-Type: application/json" \
                     -H "Authorization: Bearer $OPENAI_API_KEY" \
                     -d "$payload")
@@ -34,7 +40,7 @@ generate_commit_message() {
     # Extract the commit message from the response
     commit_message=$(echo "$response" | jq -r '.choices[0].message.content')
 
-    # Use the commit message
+    # Return the commit message
     echo "$commit_message"
 }
 
@@ -44,7 +50,12 @@ current_path=$(git rev-parse --show-toplevel)
 
 # Check if the current path is not a subdirectory of the Projects directory
 if ! is_subdir $work_path $current_path; then
-    # Call generate_commit_message and use its output
-    commit_msg="AI Generated: $(generate_commit_message)"
-    echo "$commit_msg"
+    # Generate a commit message for staged changes
+    commit_msg=$(generate_commit_message)
+
+    # If a commit message was generated, use it to commit the changes
+    if [ -n "$commit_msg" ]; then
+        git commit -m "$commit_msg"
+        echo "Committed with AI-generated message: $commit_msg"
+    fi
 fi
