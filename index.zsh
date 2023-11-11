@@ -20,7 +20,7 @@ generate_and_commit() {
     # Capture git diff of staged files
     git_diff=$(git diff --cached)
 
-    # If there are no staged changes, exit
+    # If there are no staged changes, exit the function
     if [ -z "$git_diff" ]; then
         echo "No staged changes to commit."
         return
@@ -42,7 +42,7 @@ generate_and_commit() {
 
     # Commit the changes with the generated message
     if [ -n "$commit_message" ]; then
-        git commit -m "$commit_message"
+        git commit -m "AI Generated Message: $commit_message"
         echo "Committed with AI-generated message: $commit_message"
     fi
 }
