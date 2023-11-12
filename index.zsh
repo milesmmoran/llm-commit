@@ -37,13 +37,17 @@ generate_and_commit() {
                     -H "Authorization: Bearer $OPENAI_API_KEY" \
                     -d "$payload")
 
+    echo $response
+
     # Extract the commit message from the response
     commit_message=$(echo "$response" | jq -r '.choices[0].message.content')
 
+    one_line_commit_message=$(echo "$commit_message" | tr '\n' ' ')
+
     # Commit the changes with the generated message
-    if [ -n "$commit_message" ]; then
-        git commit -m "AI Generated Message: $commit_message"
-        echo "Committed with AI-generated message: $commit_message"
+    if [ -n "$one_line_commit_message" ]; then
+        git commit -m "AI Generated Message: $one_line_commit_message"
+        echo "Committed with AI-generated message: $one_line_commit_message"
     fi
 }
 
