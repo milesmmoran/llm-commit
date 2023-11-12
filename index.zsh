@@ -41,13 +41,12 @@ generate_and_commit() {
 
     # Extract the commit message from the response
     commit_message=$(echo "$response" | jq -r '.choices[0].message.content')
-
-    one_line_commit_message=$(echo "$commit_message" | tr '\n' ' ')
+    
+    echo "$commit_message"
 
     # Commit the changes with the generated message
-    if [ -n "$one_line_commit_message" ]; then
-        git commit -m "AI Generated Message: $one_line_commit_message"
-        echo "Committed with AI-generated message: $one_line_commit_message"
+    if [ -n "$commit_message" ]; then
+        git commit -m "AI Generated Message: $commit_message"
     fi
 }
 
