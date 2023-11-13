@@ -40,9 +40,8 @@ generate_and_commit() {
     echo $response
 
     # Extract the commit message from the response
-    commit_message=$(echo "$response" | jq -r '.choices[0].message.content')
-    
-    echo "$commit_message"
+   # Extract and escape the commit message
+    commit_message=$(echo "$response" | jq -r '.choices[0].message.content' | sed ':a;N;$!ba;s/\n/\\n/g')
 
     # Commit the changes with the generated message
     if [ -n "$commit_message" ]; then
